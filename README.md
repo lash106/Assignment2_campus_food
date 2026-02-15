@@ -66,6 +66,3 @@ Deliverables for submission
 - `sync_latency_failure.txt`
 - `sync_latency_summary.txt`
 
-If you want, I can:
-- Add a single CSV that merges the three runs for plotting
-- Commit these files and a tag for submission
