@@ -25,12 +25,12 @@ Quick start (team workflow)
 
 3. Prepare a local Python virtual environment for the test runner (optional but recommended):
 
-   cd ..   # repo root
-   python3 -m venv .venv
-   source .venv/bin/activate
+   cd ..   # repo root 
+   python3 -m venv .venv 
+   source .venv/bin/activate 
    pip install -r requirements.txt
 
-4. Run the baseline latency test:
+5. Run the baseline latency test:
 
    python tests/test_sync.py
 
