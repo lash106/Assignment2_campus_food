@@ -1,0 +1,93 @@
+Sync Latency Summary
+====================
+
+Baseline test (no Inventory delay)
+---------------------------------
+Sending 10 requests to http://localhost:5000/order
+  # | status | latency (s)
+----+--------+------------
+  1 |    200 |      0.046
+  2 |    200 |      0.006
+  3 |    200 |      0.006
+  4 |    200 |      0.005
+  5 |    200 |      0.004
+  6 |    200 |      0.004
+  7 |    200 |      0.004
+  8 |    200 |      0.004
+  9 |    200 |      0.004
+ 10 |    200 |      0.004
+
+Summary:
+  Success: 10/10
+  Average latency: 0.009s
+
+
+Delay injection (Inventory set to sleep 2s)
+-----------------------------------------
+Sending 10 requests to http://localhost:5000/order
+  # | status | latency (s)
+----+--------+------------
+  1 |    503 |      1.043
+  2 |    503 |      1.015
+  3 |    503 |      1.018
+  4 |    503 |      1.019
+  5 |    503 |      1.018
+  6 |    503 |      1.017
+  7 |    503 |      1.016
+  8 |    503 |      1.015
+  9 |    503 |      1.012
+ 10 |    503 |      1.010
+
+Summary:
+  Success: 0/10
+  Average latency: 1.018s
+
+
+Inventory failure (Inventory service stopped)
+--------------------------------------------
+Sending 10 requests to http://localhost:5000/order
+  # | status | latency (s)
+----+--------+------------
+  1 |    503 |      0.051
+  2 |    503 |      0.007
+  3 |    503 |      0.006
+  4 |    503 |      0.005
+  5 |    503 |      0.005
+  6 |    503 |      0.006
+  7 |    503 |      0.005
+  8 |    503 |      0.006
+  9 |    503 |      0.005
+ 10 |    503 |      0.005
+
+Summary:
+  Success: 0/10
+  Average latency: 0.010s
+
+
+Reasoning / Analysis
+--------------------
+- Baseline: all requests succeeded quickly (avg ~0.009s). Order -> Inventory -> Notification round-trip is fast when Inventory responds immediately.
+- Delay injection: Inventory was configured to sleep 2s, but the Order service calls Inventory with a 1.0s timeout. Each Order request therefore times out waiting for Inventory (~1s) and returns HTTP 503. That produces the observed average ~1.018s.
+- Inventory failure: with Inventory stopped the Order service detects the connection error quickly (no long wait) and returns 503 almost immediately; average latency is low (~0.010s) because the failure is detected via connection refusal/short error path rather than a timeout sleep.
+
+How to reproduce
+----------------
+1. Baseline: ensure `INVENTORY_DELAY=0` in `sync-rest/docker-compose.yml`, then:
+   cd sync-rest
+   docker compose up --build -d
+   /path/to/venv/bin/python ../tests/test_sync.py
+
+2. Delay injection: set `INVENTORY_DELAY=1` for `inventory_service` in `sync-rest/docker-compose.yml`, rebuild and run the stack, then run the test script again.
+
+3. Failure test: stop the inventory container:
+   cd sync-rest
+   docker compose stop inventory_service
+   run the test script again (Order will return 503 quickly).
+
+Files included
+--------------
+- sync_latency_baseline.txt
+- sync_latency_delay.txt
+- sync_latency_failure.txt
+
+Generated: sync_latency_summary.txt
