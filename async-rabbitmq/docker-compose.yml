@@ -1,0 +1,73 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-broker
+    ports:
+      - "5672:5672"      # AMQP port
+      - "15672:15672"    # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  order_service:
+    build: ./order_service
+    container_name: order-service
+    ports:
+      - "5001:5001"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=admin123
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./order_service:/app
+      - ./common:/app/common
+
+  inventory_service:
+    build: ./inventory_service
+    container_name: inventory-service
+    ports:
+      - "5002:5002"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=admin123
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./inventory_service:/app
+      - ./common:/app/common
+
+  notification_service:
+    build: ./notification_service
+    container_name: notification-service
+    ports:
+      - "5003:5003"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=admin123
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./notification_service:/app
+      - ./common:/app/common
+
+volumes:
+  rabbitmq_data:
+
+
