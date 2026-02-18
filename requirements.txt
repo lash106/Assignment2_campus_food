@@ -1,0 +1,9 @@
+# Core dependencies for all communication models
+flask
+requests
+pika
+kafka-python
+# For shared code
+
+# Testing
+pytest

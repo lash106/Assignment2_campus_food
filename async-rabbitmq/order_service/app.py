@@ -7,15 +7,13 @@ from datetime import datetime
 
 # Add common directory to path
 sys.path.append('/app/common')
-try:
-    from ids import generate_order_id, generate_event_id
-except ImportError:
-    # Fallback if common not mounted
-    import uuid
-    def generate_order_id():
-        return f"ORD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8]}"
-    def generate_event_id():
-        return str(uuid.uuid4())
+from ids import generate_id
+
+def generate_order_id():
+    return generate_id("order")
+
+def generate_event_id():
+    return generate_id("event")
 
 app = Flask(__name__)
 

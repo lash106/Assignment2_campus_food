@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../common')))
+from ids import generate_id
 import logging
 from flask import Flask, request, jsonify
 import requests
@@ -19,7 +22,11 @@ NOTIFICATION_TIMEOUT = float(os.getenv("NOTIFICATION_TIMEOUT", "2.0"))
 
 @app.route("/order", methods=["POST"])
 def create_order():
+
     payload = request.get_json(silent=True) or {}
+    # Assign a consistent order_id if not present
+    if 'order_id' not in payload:
+        payload['order_id'] = generate_id("order")
 
     # Call Inventory first; if it times out or is unreachable return 503
     try:

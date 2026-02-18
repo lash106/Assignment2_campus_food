@@ -2,7 +2,12 @@ from kafka import KafkaProducer
 import json
 import time
 import random
+
 from datetime import datetime
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../common')))
+from ids import generate_id
 
 def create_producer():
     """Create Kafka producer with retry logic"""
@@ -32,7 +37,7 @@ def generate_order_event(order_id):
     
     return {
         "event_type": "OrderPlaced",
-        "order_id": f"ord_{order_id}",
+        "order_id": generate_id("order"),
         "user_id": f"user_{random.randint(1, 100)}",
         "items": random.sample(items, random.randint(1, 3)),
         "timestamp": datetime.now().isoformat(),
@@ -55,9 +60,8 @@ def main():
             key=event['order_id'],
             value=event
         )
-        
         if (i + 1) % 1000 == 0:
-            print(f"Published {i + 1} events...")
+            print(f"Published {i + 1} events... (last order_id: {event['order_id']})")
     
     producer.flush()
     elapsed = time.time() - start_time
